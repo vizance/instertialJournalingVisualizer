@@ -186,5 +186,5 @@ curl -O https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartj
 
 ---
 
-**最後更新**: 2024-12-02
-**版本**: v4 Stable
+**最後更新**: 2024-12-03
+**版本**: v1.0
