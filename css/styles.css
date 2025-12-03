@@ -1,0 +1,315 @@
+/* Gumroad-Inspired Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    /* Gumroad Color Palette */
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-gray-50: #fafafa;
+    --color-gray-100: #f5f5f5;
+    --color-gray-200: #e5e5e5;
+    --color-gray-300: #d4d4d4;
+    --color-gray-400: #a3a3a3;
+    --color-gray-500: #737373;
+    --color-gray-600: #525252;
+    --color-gray-700: #404040;
+    --color-gray-800: #262626;
+    --color-gray-900: #171717;
+
+    /* Accent Colors - Minimal, used sparingly */
+    --color-accent: #FF90E8;
+    --color-accent-dark: #E570CF;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+    --font-size-5xl: 3rem;
+
+    /* Spacing - Generous, Gumroad-style */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-24: 6rem;
+
+    /* Border Radius - Soft, modern */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    --radius-full: 9999px;
+
+    /* Shadows - Subtle */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--color-white);
+    color: var(--color-black);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Chart wrapper - maintain functionality */
+.chart-wrapper {
+    position: relative;
+    height: 350px !important;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Loading spinner - Gumroad style */
+.loader {
+    border: 2px solid var(--color-gray-200);
+    border-radius: 50%;
+    border-top: 2px solid var(--color-black);
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Details/Summary - Clean style */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Drag and Drop - Minimal, functional */
+.draggable-item {
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.draggable-item:active {
+    cursor: grabbing;
+}
+
+.drop-zone {
+    transition: all 0.2s ease;
+}
+
+.drop-zone.drag-over {
+    background-color: var(--color-gray-50);
+    border-color: var(--color-black);
+    transform: scale(1.01);
+}
+
+/* Gumroad Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--color-black);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background: var(--color-gray-800);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+    background: var(--color-white);
+    color: var(--color-black);
+    border: 2px solid var(--color-black);
+}
+
+.btn-secondary:hover {
+    background: var(--color-gray-50);
+}
+
+.btn-accent {
+    background: var(--color-accent);
+    color: var(--color-black);
+}
+
+.btn-accent:hover {
+    background: var(--color-accent-dark);
+    transform: translateY(-1px);
+}
+
+.btn-lg {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--font-size-lg);
+}
+
+.btn-sm {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+/* Cards - Clean, minimal */
+.card {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    border-color: var(--color-gray-300);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    margin-bottom: var(--space-6);
+}
+
+.card-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--color-black);
+    margin: 0;
+}
+
+.card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-500);
+    margin-top: var(--space-2);
+}
+
+/* Input fields - Gumroad style */
+.input {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    color: var(--color-black);
+    background: var(--color-white);
+    border: 2px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--color-black);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.input::placeholder {
+    color: var(--color-gray-400);
+}
+
+textarea.input {
+    resize: vertical;
+    min-height: 120px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+/* Badge - Minimal */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    background: var(--color-gray-100);
+    color: var(--color-gray-700);
+}
+
+.badge-accent {
+    background: var(--color-accent);
+    color: var(--color-black);
+}
+
+/* Section spacing - Generous */
+.section {
+    margin-bottom: var(--space-16);
+}
+
+.section-lg {
+    margin-bottom: var(--space-24);
+}
+
+/* Divider */
+.divider {
+    height: 1px;
+    background: var(--color-gray-200);
+    margin: var(--space-8) 0;
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.text-muted { color: var(--color-gray-500); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-lg { font-size: var(--font-size-lg); }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    :root {
+        --font-size-4xl: 1.875rem;
+        --font-size-3xl: 1.5rem;
+    }
+
+    .card {
+        padding: var(--space-6);
+    }
+}

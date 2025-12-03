@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日誌視覺化工具</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
+
+    <!-- html2canvas for Screenshot -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" defer></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <!-- Marked (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+
+    <!-- Gumroad-style CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        /* Additional layout styles */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .container-wide {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-gray-200);
+            padding: var(--space-6) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: var(--font-size-xl);
+            font-weight: 900;
+            color: var(--color-black);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .version-badge {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            background: var(--color-accent);
+            color: var(--color-black);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+        }
+
+        /* Hero section */
+        .hero {
+            padding: var(--space-24) 0 var(--space-16);
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: var(--font-size-5xl);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 var(--space-6);
+            color: var(--color-black);
+        }
+
+        .hero-subtitle {
+            font-size: var(--font-size-xl);
+            color: var(--color-gray-600);
+            margin: 0 auto var(--space-8);
+            max-width: 600px;
+        }
+
+        /* Main content */
+        main {
+            padding: var(--space-16) 0;
+        }
+
+        /* Grid layouts */
+        .grid {
+            display: grid;
+            gap: var(--space-8);
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        /* API Key section */
+        .api-section {
+            background: var(--color-gray-50);
+            border: 2px solid var(--color-gray-200);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .api-label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--color-gray-700);
+            margin-bottom: var(--space-2);
+            display: block;
+        }
+
+        .input-group {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group .input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .message {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            transition: opacity 0.3s ease;
+        }
+
+        .message.hidden {
+            opacity: 0;
+        }
+
+        .message-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .message-error {
+            background: var(--color-error);
+            color: white;
+        }
+
+        /* Textarea */
+        .log-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: var(--space-4);
+            font-size: var(--font-size-base);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            color: var(--color-black);
+            background: var(--color-white);
+            border: 2px solid var(--color-gray-300);
+            border-radius: var(--radius-lg);
+            resize: vertical;
+            line-height: 1.6;
+            transition: all 0.2s ease;
+        }
+
+        .log-textarea:focus {
+            outline: none;
+            border-color: var(--color-black);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Results section */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Chart containers */
+        .chart-container {
+            background: var(--color-white);
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-title {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--color-black);
+            margin: 0;
+        }
+
+        /* Analysis list */
+        .analysis-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .analysis-item {
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-3);
+        }
+
+        .analysis-item-primary {
+            background: var(--color-accent);
+            border: 2px solid var(--color-accent-dark);
+        }
+
+        .analysis-item-secondary {
+            background: var(--color-gray-50);
+            border: 1px solid var(--color-gray-200);
+        }
+
+        /* Kanban */
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-6);
+            margin-top: var(--space-6);
+        }
+
+        .kanban-column {
+            background: var(--color-gray-50);
+            border: 2px solid var(--color-gray-200);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            min-height: 200px;
+        }
+
+        .kanban-header {
+            font-size: var(--font-size-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--color-gray-300);
+            margin-bottom: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-count {
+            background: var(--color-white);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+        }
+
+        .kanban-item {
+            background: var(--color-white);
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin-bottom: var(--space-3);
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .kanban-item:hover {
+            border-color: var(--color-black);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kanban-item-time {
+            font-size: var(--font-size-xs);
+            color: var(--color-gray-600);
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+            letter-spacing: 0.02em;
+        }
+
+        .kanban-item-content {
+            font-size: var(--font-size-sm);
+            color: var(--color-black);
+            font-weight: 500;
+        }
+
+        .kanban-item-immersion {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            background: var(--color-accent);
+            color: var(--color-black);
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            margin-top: var(--space-2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--color-gray-50);
+            border-top: 1px solid var(--color-gray-200);
+            padding: var(--space-12) 0;
+            margin-top: var(--space-24);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--color-gray-500);
+            font-size: var(--font-size-sm);
+            margin: 0;
+        }
+
+        /* Stats badges */
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-badge {
+            background: var(--color-gray-100);
+            border: 1px solid var(--color-gray-300);
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: 700;
+            color: var(--color-black);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: var(--font-size-3xl);
+            }
+
+            .hero-subtitle {
+                font-size: var(--font-size-lg);
+            }
+
+            .container {
+                padding: 0 var(--space-4);
+            }
+
+            .btn-lg {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <i data-lucide="activity"></i>
+                    日誌視覺化
+                    <span class="version-badge">v5</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+
+            <!-- API Key Section -->
+            <section class="section">
+                <div class="api-section">
+                    <label for="apiKey" class="api-label">
+                        <i data-lucide="key" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i>
+                        Google Gemini API Key（選填，啟用 AI 分類）
+                    </label>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="apiKey"
+                            class="input"
+                            placeholder="貼上您的 API Key..."
+                        >
+                        <button onclick="saveApiKey()" class="btn btn-primary btn-sm">
+                            <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                            儲存
+                        </button>
+                        <button onclick="clearApiKey()" class="btn btn-secondary btn-sm">
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        <span id="apiKeyMsg" class="message hidden"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Input Section -->
+            <section class="section-lg">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">貼上您的日誌</h2>
+                        <p class="card-subtitle">格式：- 09:00 ~ 10:00 工作事項 ❚❚❚❚</p>
+                    </div>
+
+                    <textarea
+                        id="logInput"
+                        class="log-textarea"
+                        placeholder="- 07:00 ~ 08:00 起床 + 早餐 ❚❚❚
+- 08:00 ~ 09:00 工作項目 ❚❚❚❚❚
+  - > 這裡寫想法
+  - v 這裡寫行動 ..."
+                    ></textarea>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-4);">
+                        <button onclick="fillDemoData()" class="btn btn-secondary btn-sm">
+                            填入範例資料
+                        </button>
+                        <span id="statusMsg" class="text-muted"></span>
+                    </div>
+
+                    <button
+                        id="analyzeBtn"
+                        onclick="analyzeLog()"
+                        class="btn btn-primary btn-lg"
+                        style="width: 100%; margin-top: var(--space-6);"
+                    >
+                        <span id="btnIcon">
+                            <i data-lucide="zap" style="width: 20px; height: 20px;"></i>
+                        </span>
+                        <span id="loader" class="loader" style="display: none;"></span>
+                        <span id="btnText">開始分析</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Area -->
+            <div id="resultsArea" class="results-section">
+
+                <!-- Download Button -->
+                <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-8);">
+                    <button onclick="copySummaryImage()" class="btn btn-accent">
+                        <i data-lucide="copy" style="width: 16px; height: 16px;"></i>
+                        複製圖表摘要
+                    </button>
+                    <button onclick="downloadScreenshot()" class="btn btn-primary">
+                        <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                        下載完整報表
+                    </button>
+                </div>
+
+                <!-- Report -->
+                <div id="printableReport" style="background: var(--color-white); padding: var(--space-8); border-radius: var(--radius-2xl); border: 1px solid var(--color-gray-200); margin-bottom: var(--space-16);">
+
+                    <!-- Report Header -->
+                    <div style="border-bottom: 2px solid var(--color-gray-200); padding-bottom: var(--space-6); margin-bottom: var(--space-12);">
+                        <h2 style="font-size: var(--font-size-4xl); font-weight: 900; margin: 0 0 var(--space-2); color: var(--color-black);">
+                            日誌深度分析
+                        </h2>
+                        <p id="reportDate" style="color: var(--color-gray-500); margin: 0;">分析日期：--</p>
+                    </div>
+
+                    <!-- Line Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <i data-lucide="trending-up" style="width: 24px; height: 24px;"></i>
+                            <h3 class="chart-title">沉浸度心流趨勢</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="immersionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Summary Section (for copying) -->
+                    <div id="summarySectionToCopy" style="background: var(--color-gray-50); padding: var(--space-8); border-radius: var(--radius-xl); margin-bottom: var(--space-8);">
+
+                        <!-- Two Pie Charts -->
+                        <div class="grid grid-2" style="margin-bottom: var(--space-8);">
+                            <div>
+                                <div class="chart-header">
+                                    <i data-lucide="layers" style="width: 20px; height: 20px;"></i>
+                                    <h3 style="font-size: var(--font-size-xl); font-weight: 700; margin: 0;">沉浸度分佈</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="immersionDistChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="chart-header">
+                                    <i data-lucide="pie-chart" style="width: 20px; height: 20px;"></i>
+                                    <h3 style="font-size: var(--font-size-xl); font-weight: 700; margin: 0;">任務類別佔比</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Analysis -->
+                        <div style="background: var(--color-white); padding: var(--space-6); border-radius: var(--radius-lg); border: 1px solid var(--color-gray-200);">
+                            <div class="chart-header">
+                                <i data-lucide="award" style="width: 20px; height: 20px; color: var(--color-warning);"></i>
+                                <h3 style="font-size: var(--font-size-xl); font-weight: 700; margin: 0;">高價值投入分析</h3>
+                            </div>
+                            <ul id="immersionAnalysisList" class="analysis-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- AI & Trend Analysis -->
+                    <div class="grid grid-2" style="margin-bottom: var(--space-8);">
+                        <div class="card">
+                            <div class="chart-header">
+                                <i data-lucide="activity" style="width: 20px; height: 20px;"></i>
+                                <h3 style="font-size: var(--font-size-xl); font-weight: 700; margin: 0;">能量轉折點</h3>
+                            </div>
+                            <ul id="trendAnalysisList" class="analysis-list"></ul>
+                        </div>
+
+                        <div class="card" style="background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);">
+                            <div class="chart-header">
+                                <i data-lucide="sparkles" style="width: 20px; height: 20px; color: var(--color-black);"></i>
+                                <h3 style="font-size: var(--font-size-xl); font-weight: 700; margin: 0; color: var(--color-black);">AI 能量教練</h3>
+                            </div>
+                            <div id="aiLessonsContent" style="color: var(--color-black); line-height: 1.7;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats & Kanban -->
+                    <div class="card">
+                        <h3 style="font-size: var(--font-size-2xl); font-weight: 700; margin: 0 0 var(--space-6);">統計摘要</h3>
+                        <div id="statsSummary" class="stats-container"></div>
+
+                        <details open style="margin-top: var(--space-8);">
+                            <summary style="font-size: var(--font-size-lg); font-weight: 700; cursor: pointer; padding: var(--space-4); background: var(--color-gray-50); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                                <span style="display: flex; align-items: center; gap: var(--space-2);">
+                                    <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
+                                    互動式分類看板
+                                </span>
+                                <i data-lucide="chevron-down" style="width: 20px; height: 20px;"></i>
+                            </summary>
+                            <div id="categoryDetailsList" class="kanban-grid"></div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>日誌視覺化工具 • Gumroad 風格設計 • v5.0</p>
+        </div>
+    </footer>
+
+    <!-- Main Application Script (ES6 Module) -->
+    <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
